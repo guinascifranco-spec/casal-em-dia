@@ -139,7 +139,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_couple_id: { Args: { _user_id: string }; Returns: string }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
