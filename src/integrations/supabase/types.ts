@@ -14,13 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      couple_invites: {
+        Row: {
+          code: string
+          couple_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+        }
+        Insert: {
+          code: string
+          couple_id: string
+          created_at?: string
+          created_by: string
+          expires_at?: string
+        }
+        Update: {
+          code?: string
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_invites_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couple_members: {
+        Row: {
+          couple_id: string
+          display_name: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          couple_id: string
+          display_name: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          couple_id?: string
+          display_name?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couple_members_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couples: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          couple_id: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          paid_by: string
+          split_type: string
+        }
+        Insert: {
+          amount: number
+          couple_id: string
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          paid_by: string
+          split_type: string
+        }
+        Update: {
+          amount?: number
+          couple_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          paid_by?: string
+          split_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_couple_id: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
