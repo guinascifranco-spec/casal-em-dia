@@ -78,13 +78,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "MicroSaaS minimalista para casais registrarem gastos e saberem quem deve para quem. Em BRL.",
       },
-      { property: "og:title", content: "caloteiros" },
+      { property: "og:title", content: "caloteiros — controle financeiro para casais" },
       {
         property: "og:description",
         content: "Controle financeiro para casais. Sem desculpa.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "caloteiros — controle financeiro para casais" },
+      { name: "description", content: "Casal em Dia is a financial control app for couples with separate accounts." },
+      { property: "og:description", content: "Casal em Dia is a financial control app for couples with separate accounts." },
+      { name: "twitter:description", content: "Casal em Dia is a financial control app for couples with separate accounts." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1aeb97fb-cbeb-4fe7-aa92-445e3a71f8c5/id-preview-187e0eb4--a25d78f1-5f19-4c83-b61a-1e57f2fab7c5.lovable.app-1778551116273.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1aeb97fb-cbeb-4fe7-aa92-445e3a71f8c5/id-preview-187e0eb4--a25d78f1-5f19-4c83-b61a-1e57f2fab7c5.lovable.app-1778551116273.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
