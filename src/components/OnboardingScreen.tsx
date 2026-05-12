@@ -37,74 +37,91 @@ export function OnboardingScreen() {
   });
 
   return (
-    <div className="min-h-screen bg-background px-6 py-12">
-      <div className="mx-auto max-w-md">
+    <div className="relative min-h-screen overflow-hidden bg-background px-6 py-12">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 right-0 h-[420px] w-[420px] rounded-full opacity-20 blur-3xl"
+        style={{ background: "var(--gradient-luxe)" }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-md">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight">caloteiros</h1>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-gold">caloteiros</p>
+            <h1 className="font-display mt-2 text-2xl text-foreground">contas a dois</h1>
+          </div>
           <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}>
             Sair
           </Button>
         </div>
 
-        <h2 className="text-xl font-medium">Bem-vindo</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h2 className="font-display text-3xl text-foreground">Bem-vindo</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
           Crie um espaço novo para o seu casal ou entre com um código.
         </p>
 
-        <Tabs defaultValue="create" className="mt-8">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="create">Criar casal</TabsTrigger>
-            <TabsTrigger value="join">Entrar com código</TabsTrigger>
-          </TabsList>
+        <div className="card-luxe mt-8 p-6">
+          <Tabs defaultValue="create">
+            <TabsList className="grid w-full grid-cols-2 bg-[var(--color-input)]">
+              <TabsTrigger value="create">Criar casal</TabsTrigger>
+              <TabsTrigger value="join">Entrar com código</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="create" className="mt-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="cname">Seu nome de exibição</Label>
-              <Input
-                id="cname"
-                placeholder="Ex.: Fulano"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-              />
-            </div>
-            <Button
-              className="w-full h-11"
-              disabled={!createName.trim() || createM.isPending}
-              onClick={() => createM.mutate({ displayName: createName.trim() })}
-            >
-              {createM.isPending ? "Criando..." : "Criar casal"}
-            </Button>
-          </TabsContent>
+            <TabsContent value="create" className="mt-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cname" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Seu nome de exibição
+                </Label>
+                <Input
+                  id="cname"
+                  placeholder="Ex.: Fulano"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                />
+              </div>
+              <Button
+                className="h-12 w-full"
+                disabled={!createName.trim() || createM.isPending}
+                onClick={() => createM.mutate({ displayName: createName.trim() })}
+              >
+                {createM.isPending ? "Criando..." : "Criar casal"}
+              </Button>
+            </TabsContent>
 
-          <TabsContent value="join" className="mt-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="jname">Seu nome de exibição</Label>
-              <Input
-                id="jname"
-                placeholder="Ex.: Ciclana"
-                value={joinName}
-                onChange={(e) => setJoinName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="code">Código de convite</Label>
-              <Input
-                id="code"
-                placeholder="ABC123"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                className="uppercase tracking-widest tabular"
-              />
-            </div>
-            <Button
-              className="w-full h-11"
-              disabled={!joinName.trim() || code.length < 4 || joinM.isPending}
-              onClick={() => joinM.mutate({ code: code.trim(), displayName: joinName.trim() })}
-            >
-              {joinM.isPending ? "Entrando..." : "Entrar no casal"}
-            </Button>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="join" className="mt-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="jname" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Seu nome de exibição
+                </Label>
+                <Input
+                  id="jname"
+                  placeholder="Ex.: Ciclana"
+                  value={joinName}
+                  onChange={(e) => setJoinName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="code" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                  Código de convite
+                </Label>
+                <Input
+                  id="code"
+                  placeholder="ABC123"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  className="font-display tabular text-xl uppercase tracking-[0.3em] text-gold"
+                />
+              </div>
+              <Button
+                className="h-12 w-full"
+                disabled={!joinName.trim() || code.length < 4 || joinM.isPending}
+                onClick={() => joinM.mutate({ code: code.trim(), displayName: joinName.trim() })}
+              >
+                {joinM.isPending ? "Entrando..." : "Entrar no casal"}
+              </Button>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

@@ -28,8 +28,12 @@ export function ExpenseFormSheet({
   const [splitType, setSplitType] = useState<"split" | "transfer">("split");
 
   const m = useMutation({
-    mutationFn: (vars: { description: string; amount: number; paidBy: string; splitType: "split" | "transfer" }) =>
-      createFn({ data: vars }),
+    mutationFn: (vars: {
+      description: string;
+      amount: number;
+      paidBy: string;
+      splitType: "split" | "transfer";
+    }) => createFn({ data: vars }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["expenses"] });
       setOpen(false);
@@ -58,20 +62,25 @@ export function ExpenseFormSheet({
       <SheetTrigger asChild>
         <Button
           size="lg"
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full p-0 shadow-lg sm:h-12 sm:w-auto sm:px-5"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full p-0 shadow-luxe sm:h-12 sm:w-auto sm:px-5"
         >
-          <Plus className="h-5 w-5 sm:mr-1" />
+          <Plus size={20} className="sm:mr-1" />
           <span className="hidden sm:inline">Novo gasto</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent
+        side="bottom"
+        className="rounded-t-3xl border-t border-[rgba(255,255,255,0.07)] bg-card"
+      >
         <SheetHeader className="text-left">
-          <SheetTitle>Novo lançamento</SheetTitle>
+          <SheetTitle className="font-display text-2xl">Novo lançamento</SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={submit} className="mt-6 space-y-5 px-4 pb-6">
+        <form onSubmit={submit} className="mt-6 space-y-5 px-1 pb-6">
           <div className="space-y-2">
-            <Label htmlFor="desc">Descrição</Label>
+            <Label htmlFor="desc" className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Descrição
+            </Label>
             <Input
               id="desc"
               autoFocus
@@ -82,19 +91,26 @@ export function ExpenseFormSheet({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor (R$)</Label>
+            <Label
+              htmlFor="amount"
+              className="text-xs uppercase tracking-[0.2em] text-muted-foreground"
+            >
+              Valor (R$)
+            </Label>
             <Input
               id="amount"
               inputMode="decimal"
               placeholder="0,00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="tabular text-lg"
+              className="font-display tabular text-2xl text-gold"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Quem pagou</Label>
+            <Label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Quem pagou
+            </Label>
             <div className="grid grid-cols-2 gap-2">
               {members.map((mb) => (
                 <button
@@ -102,10 +118,10 @@ export function ExpenseFormSheet({
                   type="button"
                   onClick={() => setPaidBy(mb.user_id)}
                   className={cn(
-                    "h-11 rounded-lg border text-sm font-medium transition-colors",
+                    "h-12 rounded-xl border text-sm font-medium transition-all",
                     paidBy === mb.user_id
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-card text-foreground hover:bg-accent",
+                      ? "border-transparent bg-gradient-luxe text-primary-foreground shadow-luxe"
+                      : "border-[rgba(255,255,255,0.08)] bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
                   )}
                 >
                   {mb.display_name}
@@ -116,16 +132,18 @@ export function ExpenseFormSheet({
           </div>
 
           <div className="space-y-2">
-            <Label>Divisão</Label>
+            <Label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Divisão
+            </Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setSplitType("split")}
                 className={cn(
-                  "h-auto rounded-lg border p-3 text-left transition-colors",
+                  "rounded-xl border p-3 text-left transition-all",
                   splitType === "split"
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border bg-card text-foreground hover:bg-accent",
+                    ? "border-transparent bg-gradient-luxe text-primary-foreground shadow-luxe"
+                    : "border-[rgba(255,255,255,0.08)] bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
                 )}
               >
                 <div className="text-sm font-semibold">Dividir 50/50</div>
@@ -135,21 +153,22 @@ export function ExpenseFormSheet({
                 type="button"
                 onClick={() => setSplitType("transfer")}
                 className={cn(
-                  "h-auto rounded-lg border p-3 text-left transition-colors",
+                  "rounded-xl border p-3 text-left transition-all",
                   splitType === "transfer"
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border bg-card text-foreground hover:bg-accent",
+                    ? "border-transparent bg-gradient-luxe text-primary-foreground shadow-luxe"
+                    : "border-[rgba(255,255,255,0.08)] bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
                 )}
               >
                 <div className="text-sm font-semibold">Repasse 100%</div>
                 <div className="text-xs opacity-80">
-                  Pertence inteiro ao {members.find((mb) => mb.user_id === otherUserId)?.display_name ?? "outro"}
+                  Pertence inteiro ao{" "}
+                  {members.find((mb) => mb.user_id === otherUserId)?.display_name ?? "outro"}
                 </div>
               </button>
             </div>
           </div>
 
-          <Button type="submit" className="w-full h-11" disabled={m.isPending}>
+          <Button type="submit" className="h-12 w-full" disabled={m.isPending}>
             {m.isPending ? "Salvando..." : "Registrar"}
           </Button>
         </form>

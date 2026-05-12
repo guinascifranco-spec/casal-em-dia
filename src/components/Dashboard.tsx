@@ -8,7 +8,7 @@ import { ExpenseFormSheet } from "@/components/ExpenseFormSheet";
 import { OnboardingScreen } from "@/components/OnboardingScreen";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy } from "lucide-react";
+import { Copy, Heart, LogOut, Receipt } from "lucide-react";
 import { toast } from "sonner";
 
 export function Dashboard() {
@@ -37,7 +37,7 @@ export function Dashboard() {
 
   if (stateQ.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-sm text-muted-foreground">Carregando...</p>
       </div>
     );
@@ -48,58 +48,109 @@ export function Dashboard() {
   const data = stateQ.data!;
   const members = data.hasCouple ? data.members : [];
   const myUserId = data.hasCouple ? data.myUserId : "";
+  const coupleName = members.map((m) => m.display_name).join(" & ");
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-5">
-          <h1 className="text-lg font-semibold tracking-tight">caloteiros</h1>
-          <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}>
-            Sair
+    <div className="min-h-screen bg-background lg:flex">
+      {/* Sidebar (desktop) */}
+      <aside className="sidebar-luxe hidden w-64 shrink-0 flex-col px-6 py-8 lg:flex">
+        <div>
+          <p className="text-xs uppercase tracking-[0.25em] text-gold">caloteiros</p>
+          <h2 className="font-display mt-3 text-xl text-foreground">
+            {coupleName || "Casal"}
+          </h2>
+        </div>
+
+        <nav className="mt-10 flex flex-col gap-1">
+          <a className="flex items-center gap-3 rounded-xl bg-secondary/60 px-3 py-2 text-sm font-medium text-foreground">
+            <Heart size={18} className="text-rose" /> Painel
+          </a>
+          <a className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-secondary/40 hover:text-foreground">
+            <Receipt size={18} className="text-rose" /> Lançamentos
+          </a>
+        </nav>
+
+        <div className="mt-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start"
+            onClick={() => supabase.auth.signOut()}
+          >
+            <LogOut size={16} /> Sair
           </Button>
         </div>
-      </header>
+      </aside>
 
-      <main className="mx-auto max-w-2xl space-y-8 px-6 py-10 pb-32">
-        <Verdict members={members} expenses={expQ.data ?? []} myUserId={myUserId} />
-
-        {inviteQ.data && (
-          <div className="flex items-center justify-between rounded-xl border border-dashed border-border bg-card px-5 py-4">
+      <div className="flex-1">
+        {/* Mobile header */}
+        <header className="border-b border-[rgba(255,255,255,0.06)] lg:hidden">
+          <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-5">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Convite pendente</p>
-              <p className="tabular mt-1 text-lg font-semibold tracking-widest">{inviteQ.data.code}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Compartilhe esse código para o seu parceiro entrar.
-              </p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-gold">caloteiros</p>
+              <h1 className="font-display text-lg text-foreground">{coupleName || "Casal"}</h1>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                navigator.clipboard.writeText(inviteQ.data!.code);
-                toast.success("Código copiado");
-              }}
-            >
-              <Copy className="mr-2 h-4 w-4" /> Copiar
+            <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}>
+              <LogOut size={16} />
             </Button>
           </div>
-        )}
+        </header>
 
-        <section>
-          <h2 className="mb-3 text-xs uppercase tracking-widest text-muted-foreground">
-            Lançamentos
-          </h2>
-          {expQ.isLoading ? (
-            <p className="text-sm text-muted-foreground">Carregando...</p>
-          ) : (
-            <ExpenseList
-              expenses={expQ.data ?? []}
-              members={members}
-              myUserId={myUserId}
-            />
+        <main className="mx-auto max-w-2xl space-y-8 px-6 py-10 pb-32">
+          {/* Saudação */}
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+              Bem-vindos
+            </p>
+            <h1 className="font-display mt-2 text-3xl text-foreground sm:text-4xl">
+              Olá, {coupleName || "casal"} <span className="ml-1">👋</span>
+            </h1>
+          </div>
+
+          <Verdict members={members} expenses={expQ.data ?? []} myUserId={myUserId} />
+
+          {inviteQ.data && (
+            <div className="card-luxe flex items-center justify-between px-5 py-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-gold">
+                  Convite pendente
+                </p>
+                <p className="font-display tabular mt-1 text-2xl tracking-widest text-foreground">
+                  {inviteQ.data.code}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Compartilhe esse código para o seu parceiro entrar.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(inviteQ.data!.code);
+                  toast.success("Código copiado");
+                }}
+              >
+                <Copy size={16} /> Copiar
+              </Button>
+            </div>
           )}
-        </section>
-      </main>
+
+          <section>
+            <h2 className="mb-3 text-[10px] uppercase tracking-[0.25em] text-gold">
+              Lançamentos
+            </h2>
+            {expQ.isLoading ? (
+              <p className="text-sm text-muted-foreground">Carregando...</p>
+            ) : (
+              <ExpenseList
+                expenses={expQ.data ?? []}
+                members={members}
+                myUserId={myUserId}
+              />
+            )}
+          </section>
+        </main>
+      </div>
 
       {members.length >= 2 && <ExpenseFormSheet members={members} myUserId={myUserId} />}
     </div>
