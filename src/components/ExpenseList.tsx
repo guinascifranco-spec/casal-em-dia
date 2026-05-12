@@ -38,10 +38,10 @@ export function ExpenseList({
 
   if (expenses.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+      <div className="card-luxe p-10 text-center">
         <p className="text-sm text-muted-foreground">
-          Nenhum lançamento ainda. Toque em <span className="font-medium text-foreground">+ Novo gasto</span>{" "}
-          para começar.
+          Nenhum lançamento ainda. Toque em{" "}
+          <span className="font-medium text-gold">+ Novo gasto</span> para começar.
         </p>
       </div>
     );
@@ -50,23 +50,24 @@ export function ExpenseList({
   const nameOf = (uid: string) => members.find((m) => m.user_id === uid)?.display_name ?? "—";
 
   return (
-    <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+    <ul className="card-luxe divide-y divide-[rgba(255,255,255,0.06)] overflow-hidden p-0">
       {expenses.map((e) => {
         const canDelete = e.created_by === myUserId;
+        const isTransfer = e.split_type === "transfer";
         return (
-          <li key={e.id} className="flex items-start gap-4 px-5 py-4">
+          <li key={e.id} className="flex items-start gap-4 px-5 py-4 hover:bg-secondary/30">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <p className="truncate text-sm font-medium">{e.description}</p>
+                <p className="truncate text-sm font-medium text-foreground">{e.description}</p>
                 <span
                   className={
                     "rounded-md border px-1.5 py-0.5 text-[10px] uppercase tracking-wider " +
-                    (e.split_type === "split"
-                      ? "border-border text-muted-foreground"
-                      : "border-foreground/20 bg-foreground/5 text-foreground")
+                    (isTransfer
+                      ? "border-[var(--color-gold)]/40 bg-[var(--color-gold)]/10 text-gold"
+                      : "border-[var(--color-rose)]/40 bg-[var(--color-rose)]/10 text-rose")
                   }
                 >
-                  {e.split_type === "split" ? "Dividido" : "Repasse"}
+                  {isTransfer ? "Repasse" : "Dividido"}
                 </span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
@@ -75,15 +76,17 @@ export function ExpenseList({
             </div>
 
             <div className="flex items-center gap-3">
-              <p className="tabular text-sm font-semibold">{formatBRL(e.amount)}</p>
+              <p className="font-display tabular text-base font-semibold text-[color:var(--color-negative)]">
+                −{formatBRL(e.amount)}
+              </p>
               {canDelete && (
                 <button
                   type="button"
                   aria-label="Excluir"
                   onClick={() => del.mutate(e.id)}
-                  className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-[color:var(--color-negative)]"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 size={16} />
                 </button>
               )}
             </div>
