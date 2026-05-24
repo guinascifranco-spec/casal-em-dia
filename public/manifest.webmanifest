@@ -1,0 +1,16 @@
+{
+  "name": "Caloteiros",
+  "short_name": "Caloteiros",
+  "description": "Controle financeiro para casais. Sem desculpa.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F0F14",
+  "theme_color": "#0F0F14",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

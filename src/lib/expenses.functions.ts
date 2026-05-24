@@ -3,28 +3,29 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-async function getMyCoupleId(userId: string): Promise<string | null> {
+async function assertMember(userId: string, coupleId: string) {
   const { data } = await supabaseAdmin
     .from("couple_members")
-    .select("couple_id")
+    .select("user_id")
+    .eq("couple_id", coupleId)
     .eq("user_id", userId)
     .maybeSingle();
-  return data?.couple_id ?? null;
+  if (!data) throw new Error("Você não é membro deste grupo.");
 }
 
-export const listExpenses = createServerFn({ method: "GET" })
+export const listExpenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const coupleId = await getMyCoupleId(context.userId);
-    if (!coupleId) return [];
-    const { data, error } = await supabaseAdmin
+  .inputValidator(z.object({ coupleId: z.string().uuid() }).parse)
+  .handler(async ({ context, data }) => {
+    await assertMember(context.userId, data.coupleId);
+    const { data: rows, error } = await supabaseAdmin
       .from("expenses")
       .select("id, description, amount, paid_by, split_type, created_by, created_at")
-      .eq("couple_id", coupleId)
+      .eq("couple_id", data.coupleId)
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
-    return (data ?? []).map((e) => ({
+    return (rows ?? []).map((e) => ({
       ...e,
       amount: Number(e.amount),
       split_type: e.split_type as "split" | "transfer",
@@ -35,6 +36,7 @@ export const createExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     z.object({
+      coupleId: z.string().uuid(),
       description: z.string().trim().min(1).max(120),
       amount: z.number().positive().max(10_000_000),
       paidBy: z.string().uuid(),
@@ -42,20 +44,18 @@ export const createExpense = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ context, data }) => {
-    const coupleId = await getMyCoupleId(context.userId);
-    if (!coupleId) throw new Error("Você precisa estar em um casal.");
+    await assertMember(context.userId, data.coupleId);
 
-    // verify paidBy is a member
     const { data: member } = await supabaseAdmin
       .from("couple_members")
       .select("user_id")
-      .eq("couple_id", coupleId)
+      .eq("couple_id", data.coupleId)
       .eq("user_id", data.paidBy)
       .maybeSingle();
     if (!member) throw new Error("Pagador inválido.");
 
     const { error } = await supabaseAdmin.from("expenses").insert({
-      couple_id: coupleId,
+      couple_id: data.coupleId,
       description: data.description,
       amount: data.amount,
       paid_by: data.paidBy,
