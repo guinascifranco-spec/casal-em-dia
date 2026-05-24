@@ -21,7 +21,11 @@ export function OnboardingScreen() {
   const createM = useMutation({
     mutationFn: (vars: { displayName: string }) => createFn({ data: vars }),
     onSuccess: (res) => {
-      toast.success(`Casal criado. Código de convite: ${res.inviteCode}`);
+      toast.success(`Grupo criado. Código de convite: ${res.inviteCode}`);
+      try {
+        localStorage.setItem("caloteiros.activeCoupleId", res.coupleId);
+      } catch {}
+      qc.invalidateQueries({ queryKey: ["couples"] });
       qc.invalidateQueries({ queryKey: ["couple-state"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
@@ -29,8 +33,12 @@ export function OnboardingScreen() {
 
   const joinM = useMutation({
     mutationFn: (vars: { code: string; displayName: string }) => joinFn({ data: vars }),
-    onSuccess: () => {
-      toast.success("Você entrou no casal!");
+    onSuccess: (res) => {
+      toast.success("Você entrou no grupo!");
+      try {
+        localStorage.setItem("caloteiros.activeCoupleId", res.coupleId);
+      } catch {}
+      qc.invalidateQueries({ queryKey: ["couples"] });
       qc.invalidateQueries({ queryKey: ["couple-state"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
