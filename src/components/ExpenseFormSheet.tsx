@@ -13,9 +13,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export function ExpenseFormSheet({
+  coupleId,
   members,
   myUserId,
 }: {
+  coupleId: string;
   members: Member[];
   myUserId: string;
 }) {
@@ -29,13 +31,14 @@ export function ExpenseFormSheet({
 
   const m = useMutation({
     mutationFn: (vars: {
+      coupleId: string;
       description: string;
       amount: number;
       paidBy: string;
       splitType: "split" | "transfer";
     }) => createFn({ data: vars }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["expenses"] });
+      qc.invalidateQueries({ queryKey: ["expenses", coupleId] });
       setOpen(false);
       setDescription("");
       setAmount("");
@@ -52,7 +55,7 @@ export function ExpenseFormSheet({
       toast.error("Preencha descrição e valor válidos.");
       return;
     }
-    m.mutate({ description: description.trim(), amount: value, paidBy, splitType });
+    m.mutate({ coupleId, description: description.trim(), amount: value, paidBy, splitType });
   }
 
   const otherUserId = members.find((mb) => mb.user_id !== myUserId)?.user_id ?? myUserId;
