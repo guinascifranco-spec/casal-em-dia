@@ -1,95 +1,56 @@
-## Caloteiros — Controle Financeiro para Casais
+# Plano: 3 novas funcionalidades
 
-App MicroSaaS minimalista em PT-BR (BRL) para um casal registrar gastos e ver automaticamente quem deve para quem.
+## 1. Múltiplos grupos (ex: "Gastos Junho", "Gastos Julho")
 
-### Stack
-- TanStack Start (React 19) + Tailwind v4 + shadcn/ui
-- Lovable Cloud (Supabase) para auth e dados
-- Fonte: Inter (sem serifa, estética fintech flat)
+Hoje cada usuário só pode estar em **um casal**. Para suportar vários grupos (mensais ou por tema), preciso mudar o modelo:
 
-### 1. Backend (Lovable Cloud)
+**Banco (migração):**
+- Permitir múltiplas linhas em `couple_members` por `user_id` (já permite, mas várias funções usam `.maybeSingle()` assumindo 1).
+- Remover/ajustar a policy `create couple if none` e a checagem "Você já está em um casal" em `createCouple` / `joinCouple`.
+- Adicionar coluna `active_couple_id` em uma nova tabela `user_preferences` (ou usar `localStorage`) para lembrar qual grupo está selecionado.
 
-**Ativar Lovable Cloud** e criar schema:
+**Server functions (`couple.functions.ts`, `expenses.functions.ts`):**
+- Nova `listMyCouples()` → retorna todos os grupos do usuário.
+- `getMyCoupleState`, `getMyInvite`, `listExpenses`, `createExpense` passam a aceitar `coupleId` como input (e validam que o usuário é membro).
+- Nova `createCouple` aceita criar mesmo já tendo grupo.
 
-- `couples` — espaço compartilhado do casal
-  - `id uuid pk`, `name text`, `created_at`
-- `couple_members` — vincula 2 usuários a um casal
-  - `couple_id uuid fk`, `user_id uuid fk auth.users`, `display_name text`, `joined_at`
-  - unique(user_id) — um user só pertence a um casal
-- `expenses`
-  - `id uuid pk`, `couple_id uuid fk`, `description text`, `amount numeric(12,2)`,
-    `paid_by uuid fk auth.users` (quem pagou),
-    `split_type text check in ('split','transfer')` — split = 50/50, transfer = 100% pro outro
-  - `created_at timestamptz`
-- `invites` (código curto) — para o segundo parceiro entrar no casal existente
+**UI:**
+- Seletor de grupo no topo da sidebar/header (dropdown com lista + botão "+ Novo grupo").
+- Modal/sheet "Criar novo grupo" reaproveitando o fluxo de `OnboardingScreen` (nome do grupo + seu display name).
+- Persistir grupo ativo em `localStorage`.
 
-**RLS**: usuários só leem/escrevem linhas onde pertencem ao `couple_id`. Função `security definer` `get_user_couple_id(uid)` para evitar recursão.
+## 2. Modo noturno / diurno
 
-### 2. Auth & Onboarding
-- Login email/senha + Google
-- Após signup: tela "Criar casal" (gera código de convite) ou "Entrar com código"
-- Pede nome de exibição (Fulano / Ciclana)
-- Rota `_authenticated` protege o app
+- Adicionar variáveis de tema **claro** em `src/styles.css` dentro de `:root` (mantendo o atual como `.dark`). Paleta clara: fundo creme `#F0EDE8`, cartões brancos, mantendo rosê e dourado como acentos.
+- Hook `useTheme()` lendo/escrevendo em `localStorage` e aplicando a classe `dark` no `<html>`.
+- Botão toggle (ícone Sun/Moon do lucide) no header mobile e na sidebar desktop, ao lado do "Sair".
+- Default: escuro (preserva visual atual).
 
-### 3. Dashboard (rota `/`)
+## 3. Instalação PWA
 
-**Componente Veredito** (hero card no topo):
-- Calcula saldo iterando expenses:
-  - `split`: devedor = o que NÃO pagou; valor = amount/2
-  - `transfer`: devedor = o que NÃO pagou; valor = amount inteiro
-- Exibe: `Fulano deve R$ 123,45 para Ciclana` ou `Vocês estão quites ✓`
-- Tipografia grande, peso médio, muito whitespace
+⚠️ Aviso importante: PWA com service worker tem limitações no preview do Lovable (iframe). A instalação só funciona de verdade na URL publicada (`mepagacaloteira.lovable.app`).
 
-**Lista de lançamentos** abaixo:
-- Cards sutis (border 1px, sem sombra pesada)
-- Mostra: descrição, valor BRL, quem pagou, badge do tipo (Dividido / Repasse), data relativa
-- Swipe/menu para deletar (apenas autor)
+Abordagem mínima e segura (sem `vite-plugin-pwa`, sem service worker, sem cache offline):
+- Criar `public/manifest.webmanifest` com `name: "Caloteiros"`, `short_name`, `display: "standalone"`, cores do tema (`#0F0F14` / `#E8A0BF`), `start_url: "/"`.
+- Gerar ícones 192px e 512px (rosê + dourado, "C" em Playfair) em `public/icons/`.
+- Adicionar `<link rel="manifest">` e meta tags Apple touch icon / theme-color no `__root.tsx`.
+- Componente `InstallPrompt` que escuta o evento `beforeinstallprompt` e mostra um botão discreto "Instalar app" no dashboard (oculto se já instalado ou se evento não disparar — ex: iOS, que só permite "Adicionar à tela de início" manualmente; nesse caso mostro instruções).
 
-### 4. Formulário de Inserção Rápida
-- Botão flutuante `+ Novo gasto` → Sheet/Dialog
-- Campos:
-  - Descrição (text)
-  - Valor (input com máscara R$)
-  - Quem pagou (toggle entre os 2 nomes)
-  - Tipo: toggle `Dividir 50/50` | `Repasse 100%`
-- Validação Zod, salva e fecha; lista atualiza via TanStack Query
+Sem service worker = sem offline, mas é instalável e estável dentro do editor.
 
-### 5. Design System (styles.css)
-- Paleta flat: off-white background, ink quase-preto, accent verde-menta sutil para positivo / coral para negativo
-- Tokens oklch: `--background`, `--foreground`, `--muted`, `--border`, `--accent`, `--positive`, `--negative`
-- Sem gradientes, sem neumorphism; bordas 1px, radius médio, espaçamento generoso
+---
 
-### Estrutura de arquivos
-```text
-src/routes/
-  __root.tsx
-  index.tsx              → redireciona para /app ou /login
-  login.tsx
-  onboarding.tsx         → criar/entrar em casal
-  _authenticated.tsx     → guard
-  _authenticated/
-    app.tsx              → dashboard (veredito + lista)
-src/components/
-  Verdict.tsx
-  ExpenseList.tsx
-  ExpenseFormSheet.tsx
-  ExpenseCard.tsx
-src/lib/
-  expenses.functions.ts  → server fns (list/create/delete)
-  couple.functions.ts    → onboarding (criar casal, aceitar convite)
-  balance.ts             → cálculo puro do veredito
-  format.ts              → BRL formatter
-```
+## Arquivos afetados
 
-### Detalhes técnicos
-- Cálculo do veredito feito client-side a partir das expenses já carregadas (rápido, reativo)
-- TanStack Query com `ensureQueryData` no loader; `defaultPreloadStaleTime: 0` já está setado
-- Server functions usam `requireSupabaseAuth` para respeitar RLS
-- BRL: `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`
+- `supabase/migrations/...` (nova migração)
+- `src/lib/couple.functions.ts`, `src/lib/expenses.functions.ts`
+- `src/components/Dashboard.tsx`, `src/components/OnboardingScreen.tsx`, `src/components/ExpenseFormSheet.tsx`, `src/components/ExpenseList.tsx`, `src/components/Verdict.tsx`
+- Novo: `src/components/GroupSwitcher.tsx`, `src/components/CreateGroupSheet.tsx`, `src/components/ThemeToggle.tsx`, `src/components/InstallPrompt.tsx`
+- Novo: `src/hooks/use-theme.ts`, `src/hooks/use-active-couple.ts`
+- `src/styles.css` (tema claro), `src/routes/__root.tsx` (manifest + meta)
+- `public/manifest.webmanifest`, `public/icons/icon-192.png`, `public/icons/icon-512.png`
 
-### Perguntas antes de implementar
-1. Login: email/senha + Google, ou só email/senha?
-2. Permitir editar gasto, ou só criar/excluir?
-3. Quero adicionar uma ação "Quitar saldo" (registra um repasse que zera o veredito)?
+## Pontos a confirmar
 
-Posso ajustar conforme suas respostas e seguir para a implementação.
+1. Quer realmente PWA mínimo (instalável, sem offline) ou PWA completo com service worker (mais arriscado no preview)?
+2. Ao trocar de grupo, lançamentos antigos ficam visíveis no grupo correspondente, certo? (Cada grupo tem seus próprios `expenses` — nada é migrado.)
