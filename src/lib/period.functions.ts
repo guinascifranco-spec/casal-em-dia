@@ -53,3 +53,27 @@ export const createPeriod = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return period;
   });
+
+// ---------------------------------------------------------------------------
+// Delete a period
+// ---------------------------------------------------------------------------
+export const deletePeriod = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ periodId: z.string().uuid() }).parse)
+  .handler(async ({ context, data }) => {
+    const { data: period } = await supabaseAdmin
+      .from("periods")
+      .select("couple_id")
+      .eq("id", data.periodId)
+      .maybeSingle();
+    if (!period) throw new Error("Período não encontrado.");
+
+    await assertCoupleAccess(context.userId, period.couple_id);
+
+    const { error } = await supabaseAdmin
+      .from("periods")
+      .delete()
+      .eq("id", data.periodId);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  });
