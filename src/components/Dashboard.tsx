@@ -1,71 +1,97 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  getMyCoupleState,
-  getMyInvite,
-  listMyCouples,
-} from "@/lib/couple.functions";
+import { getMyCouple, getMyInvite } from "@/lib/couple.functions";
+import { listPeriods } from "@/lib/period.functions";
 import { listExpenses } from "@/lib/expenses.functions";
 import { Verdict } from "@/components/Verdict";
 import { ExpenseList } from "@/components/ExpenseList";
 import { ExpenseFormSheet } from "@/components/ExpenseFormSheet";
 import { OnboardingScreen } from "@/components/OnboardingScreen";
-import { GroupSwitcher } from "@/components/GroupSwitcher";
+import { PeriodSwitcher } from "@/components/PeriodSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useActiveCouple } from "@/hooks/use-active-couple";
 import { Copy, Heart, LogOut, Receipt } from "lucide-react";
 import { toast } from "sonner";
 
+const ACTIVE_PERIOD_KEY = "casal-em-dia.activePeriodId";
+
+function useActivePeriod() {
+  const [activeId, setActiveIdState] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(ACTIVE_PERIOD_KEY);
+    } catch {
+      return null;
+    }
+  });
+  const setActiveId = (id: string) => {
+    setActiveIdState(id);
+    try {
+      localStorage.setItem(ACTIVE_PERIOD_KEY, id);
+    } catch {}
+  };
+  return { activeId, setActiveId };
+}
+
 export function Dashboard() {
-  const { activeId, setActiveId } = useActiveCouple();
-  const listFn = useServerFn(listMyCouples);
-  const stateFn = useServerFn(getMyCoupleState);
+  const { activeId, setActiveId } = useActivePeriod();
+
+  const coupleFn = useServerFn(getMyCouple);
   const inviteFn = useServerFn(getMyInvite);
+  const periodsFn = useServerFn(listPeriods);
   const expensesFn = useServerFn(listExpenses);
 
-  const couplesQ = useQuery({
-    queryKey: ["couples"],
-    queryFn: () => listFn(),
+  // ── Couple (permanent) ──────────────────────────────────────────────────
+  const coupleQ = useQuery({
+    queryKey: ["couple"],
+    queryFn: () => coupleFn(),
   });
 
-  // Resolve which couple to load
-  const resolvedId = useMemo(() => {
-    const list = couplesQ.data ?? [];
-    if (list.length === 0) return null;
-    if (activeId && list.some((c) => c.id === activeId)) return activeId;
-    return list[0].id;
-  }, [activeId, couplesQ.data]);
+  const hasCouple = coupleQ.data?.hasCouple === true;
+  const coupleId = hasCouple ? coupleQ.data!.coupleId : null;
+  const members = hasCouple ? coupleQ.data!.members : [];
+  const myUserId = hasCouple ? coupleQ.data!.myUserId : "";
+  const memberNames = members.map((m) => m.display_name).join(" & ");
+  const groupLabel = (hasCouple && coupleQ.data!.coupleName) || memberNames || "Casal";
 
-  // Keep storage in sync with resolved choice
-  useEffect(() => {
-    if (resolvedId && resolvedId !== activeId) setActiveId(resolvedId);
-  }, [resolvedId, activeId, setActiveId]);
-
-  const stateQ = useQuery({
-    queryKey: ["couple-state", resolvedId],
-    queryFn: () => stateFn({ data: { coupleId: resolvedId! } }),
-    enabled: !!resolvedId,
-  });
-
-  const hasCouple = stateQ.data?.hasCouple === true;
-
+  // ── Invite (shown only while partner hasn't joined) ─────────────────────
   const inviteQ = useQuery({
-    queryKey: ["invite", resolvedId],
-    queryFn: () => inviteFn({ data: { coupleId: resolvedId! } }),
-    enabled: hasCouple && !!resolvedId,
+    queryKey: ["invite"],
+    queryFn: () => inviteFn(),
+    enabled: hasCouple,
   });
 
+  // ── Periods ─────────────────────────────────────────────────────────────
+  const periodsQ = useQuery({
+    queryKey: ["periods", coupleId],
+    queryFn: () => periodsFn({ data: { coupleId: coupleId! } }),
+    enabled: !!coupleId,
+  });
+
+  const periods = periodsQ.data ?? [];
+
+  // Resolve active period: stored id if still valid, otherwise most recent
+  const resolvedPeriodId = useMemo(() => {
+    if (periods.length === 0) return null;
+    if (activeId && periods.some((p) => p.id === activeId)) return activeId;
+    return periods[0].id;
+  }, [activeId, periods]);
+
+  useEffect(() => {
+    if (resolvedPeriodId && resolvedPeriodId !== activeId) setActiveId(resolvedPeriodId);
+  }, [resolvedPeriodId, activeId, setActiveId]);
+
+  // ── Expenses for the active period ─────────────────────────────────────
   const expQ = useQuery({
-    queryKey: ["expenses", resolvedId],
-    queryFn: () => expensesFn({ data: { coupleId: resolvedId! } }),
-    enabled: hasCouple && !!resolvedId,
+    queryKey: ["expenses", resolvedPeriodId],
+    queryFn: () => expensesFn({ data: { periodId: resolvedPeriodId! } }),
+    enabled: !!resolvedPeriodId,
   });
 
-  if (couplesQ.isLoading || (resolvedId && stateQ.isLoading)) {
+  // ── Loading / Onboarding ────────────────────────────────────────────────
+  if (coupleQ.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-sm text-muted-foreground">Carregando...</p>
@@ -73,35 +99,30 @@ export function Dashboard() {
     );
   }
 
-  if ((couplesQ.data ?? []).length === 0 || !hasCouple) {
+  if (!hasCouple) {
     return <OnboardingScreen />;
   }
 
-  const data = stateQ.data!;
-  const members = data.hasCouple ? data.members : [];
-  const myUserId = data.hasCouple ? data.myUserId : "";
-  const memberNames = members.map((m) => m.display_name).join(" & ");
-  const groupLabel =
-    (data.hasCouple && data.coupleName) || memberNames || "Grupo";
-
-  const groups = couplesQ.data ?? [];
+  const activePeriod = periods.find((p) => p.id === resolvedPeriodId);
 
   return (
     <div className="min-h-screen bg-background lg:flex">
       {/* Sidebar (desktop) */}
       <aside className="sidebar-luxe hidden w-64 shrink-0 flex-col px-6 py-8 lg:flex">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-gold">caloteiros</p>
-          <h2 className="font-display mt-3 text-xl text-foreground">{memberNames || "Casal"}</h2>
+          <p className="text-xs uppercase tracking-[0.25em] text-gold">casal em dia</p>
+          <h2 className="font-display mt-3 text-xl text-foreground">{groupLabel}</h2>
         </div>
 
         <div className="mt-6">
-          <GroupSwitcher
-            groups={groups}
-            activeId={resolvedId}
-            activeLabel={groupLabel}
-            onSelect={setActiveId}
-          />
+          {coupleId && (
+            <PeriodSwitcher
+              coupleId={coupleId}
+              periods={periods}
+              activeId={resolvedPeriodId}
+              onSelect={setActiveId}
+            />
+          )}
         </div>
 
         <nav className="mt-8 flex flex-col gap-1">
@@ -133,7 +154,7 @@ export function Dashboard() {
         <header className="border-b border-border lg:hidden">
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-6 py-5">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-gold">caloteiros</p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-gold">casal em dia</p>
               <h1 className="font-display truncate text-lg text-foreground">{groupLabel}</h1>
             </div>
             <ThemeToggle />
@@ -141,21 +162,23 @@ export function Dashboard() {
               <LogOut size={16} />
             </Button>
           </div>
-          <div className="mx-auto max-w-2xl px-6 pb-4">
-            <GroupSwitcher
-              groups={groups}
-              activeId={resolvedId}
-              activeLabel={groupLabel}
-              onSelect={setActiveId}
-            />
-          </div>
+          {coupleId && (
+            <div className="mx-auto max-w-2xl px-6 pb-4">
+              <PeriodSwitcher
+                coupleId={coupleId}
+                periods={periods}
+                activeId={resolvedPeriodId}
+                onSelect={setActiveId}
+              />
+            </div>
+          )}
         </header>
 
         <main className="mx-auto max-w-2xl space-y-8 px-6 py-10 pb-32">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                Bem-vindos
+                {activePeriod ? activePeriod.name : "Bem-vindos"}
               </p>
               <h1 className="font-display mt-2 text-3xl text-foreground sm:text-4xl">
                 Olá, {memberNames || "casal"} <span className="ml-1">👋</span>
@@ -166,8 +189,7 @@ export function Dashboard() {
             </div>
           </div>
 
-          <Verdict members={members} expenses={expQ.data ?? []} myUserId={myUserId} />
-
+          {/* Invite banner — only while partner hasn't joined */}
           {inviteQ.data && (
             <div className="card-luxe flex items-center justify-between gap-4 px-5 py-4">
               <div className="min-w-0">
@@ -178,7 +200,8 @@ export function Dashboard() {
                   {inviteQ.data.code}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Compartilhe esse código para o seu parceiro entrar.
+                  Compartilhe este código <strong>uma única vez</strong> com seu parceiro. Depois
+                  disso, ambos criam períodos livremente.
                 </p>
               </div>
               <Button
@@ -194,26 +217,44 @@ export function Dashboard() {
             </div>
           )}
 
-          <section>
-            <h2 className="mb-3 text-[10px] uppercase tracking-[0.25em] text-gold">
-              Lançamentos
-            </h2>
-            {expQ.isLoading ? (
-              <p className="text-sm text-muted-foreground">Carregando...</p>
-            ) : (
-              <ExpenseList
-                expenses={expQ.data ?? []}
-                members={members}
-                myUserId={myUserId}
-              />
-            )}
-          </section>
+          {/* No periods yet */}
+          {periods.length === 0 && !periodsQ.isLoading && (
+            <div className="card-luxe p-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                Nenhum período criado ainda.{" "}
+                <span className="font-medium text-gold">
+                  Use o seletor acima para criar o primeiro período (ex.: Junho 2026).
+                </span>
+              </p>
+            </div>
+          )}
+
+          {resolvedPeriodId && (
+            <>
+              <Verdict members={members} expenses={expQ.data ?? []} myUserId={myUserId} />
+
+              <section>
+                <h2 className="mb-3 text-[10px] uppercase tracking-[0.25em] text-gold">
+                  Lançamentos
+                </h2>
+                {expQ.isLoading ? (
+                  <p className="text-sm text-muted-foreground">Carregando...</p>
+                ) : (
+                  <ExpenseList
+                    expenses={expQ.data ?? []}
+                    members={members}
+                    myUserId={myUserId}
+                  />
+                )}
+              </section>
+            </>
+          )}
         </main>
       </div>
 
-      {members.length >= 1 && resolvedId && (
+      {resolvedPeriodId && (
         <ExpenseFormSheet
-          coupleId={resolvedId}
+          periodId={resolvedPeriodId}
           members={members}
           myUserId={myUserId}
         />

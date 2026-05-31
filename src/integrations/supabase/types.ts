@@ -93,10 +93,39 @@ export type Database = {
         }
         Relationships: []
       }
+      periods: {
+        Row: {
+          id: string
+          couple_id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          couple_id: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          couple_id?: string
+          name?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "periods_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
-          couple_id: string
+          period_id: string
           created_at: string
           created_by: string
           description: string
@@ -106,7 +135,7 @@ export type Database = {
         }
         Insert: {
           amount: number
-          couple_id: string
+          period_id: string
           created_at?: string
           created_by: string
           description: string
@@ -116,7 +145,7 @@ export type Database = {
         }
         Update: {
           amount?: number
-          couple_id?: string
+          period_id?: string
           created_at?: string
           created_by?: string
           description?: string
@@ -126,10 +155,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "expenses_couple_id_fkey"
-            columns: ["couple_id"]
+            foreignKeyName: "expenses_period_id_fkey"
+            columns: ["period_id"]
             isOneToOne: false
-            referencedRelation: "couples"
+            referencedRelation: "periods"
             referencedColumns: ["id"]
           },
         ]

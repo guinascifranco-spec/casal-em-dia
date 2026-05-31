@@ -3,25 +3,27 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-async function assertMember(userId: string, coupleId: string) {
+/** Verify the user has access to the period (via couple membership) */
+async function assertPeriodAccess(userId: string, periodId: string) {
   const { data } = await supabaseAdmin
-    .from("couple_members")
-    .select("user_id")
-    .eq("couple_id", coupleId)
-    .eq("user_id", userId)
+    .from("periods")
+    .select("couple_id, couple_members!inner(user_id)")
+    .eq("id", periodId)
+    .eq("couple_members.user_id", userId)
     .maybeSingle();
-  if (!data) throw new Error("Você não é membro deste grupo.");
+  if (!data) throw new Error("Você não tem acesso a este período.");
 }
 
 export const listExpenses = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ coupleId: z.string().uuid() }).parse)
+  .inputValidator(z.object({ periodId: z.string().uuid() }).parse)
   .handler(async ({ context, data }) => {
-    await assertMember(context.userId, data.coupleId);
+    await assertPeriodAccess(context.userId, data.periodId);
+
     const { data: rows, error } = await supabaseAdmin
       .from("expenses")
       .select("id, description, amount, paid_by, split_type, created_by, created_at")
-      .eq("couple_id", data.coupleId)
+      .eq("period_id", data.periodId)
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
@@ -36,7 +38,7 @@ export const createExpense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
     z.object({
-      coupleId: z.string().uuid(),
+      periodId: z.string().uuid(),
       description: z.string().trim().min(1).max(120),
       amount: z.number().positive().max(10_000_000),
       paidBy: z.string().uuid(),
@@ -44,18 +46,26 @@ export const createExpense = createServerFn({ method: "POST" })
     }).parse,
   )
   .handler(async ({ context, data }) => {
-    await assertMember(context.userId, data.coupleId);
+    await assertPeriodAccess(context.userId, data.periodId);
 
-    const { data: member } = await supabaseAdmin
+    // Verify paidBy is a member of the couple that owns this period
+    const { data: period } = await supabaseAdmin
+      .from("periods")
+      .select("couple_id")
+      .eq("id", data.periodId)
+      .maybeSingle();
+    if (!period) throw new Error("Período não encontrado.");
+
+    const { data: payer } = await supabaseAdmin
       .from("couple_members")
       .select("user_id")
-      .eq("couple_id", data.coupleId)
+      .eq("couple_id", period.couple_id)
       .eq("user_id", data.paidBy)
       .maybeSingle();
-    if (!member) throw new Error("Pagador inválido.");
+    if (!payer) throw new Error("Pagador inválido.");
 
     const { error } = await supabaseAdmin.from("expenses").insert({
-      couple_id: data.coupleId,
+      period_id: data.periodId,
       description: data.description,
       amount: data.amount,
       paid_by: data.paidBy,

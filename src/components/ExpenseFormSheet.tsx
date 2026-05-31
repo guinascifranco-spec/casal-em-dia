@@ -13,11 +13,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export function ExpenseFormSheet({
-  coupleId,
+  periodId,
   members,
   myUserId,
 }: {
-  coupleId: string;
+  periodId: string;
   members: Member[];
   myUserId: string;
 }) {
@@ -31,14 +31,14 @@ export function ExpenseFormSheet({
 
   const m = useMutation({
     mutationFn: (vars: {
-      coupleId: string;
+      periodId: string;
       description: string;
       amount: number;
       paidBy: string;
       splitType: "split" | "transfer";
     }) => createFn({ data: vars }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["expenses", coupleId] });
+      qc.invalidateQueries({ queryKey: ["expenses", periodId] });
       setOpen(false);
       setDescription("");
       setAmount("");
@@ -55,10 +55,10 @@ export function ExpenseFormSheet({
       toast.error("Preencha descrição e valor válidos.");
       return;
     }
-    m.mutate({ coupleId, description: description.trim(), amount: value, paidBy, splitType });
+    m.mutate({ periodId, description: description.trim(), amount: value, paidBy, splitType });
   }
 
-  const otherUserId = members.find((mb) => mb.user_id !== myUserId)?.user_id ?? myUserId;
+  const otherMember = members.find((mb) => mb.user_id !== myUserId);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -131,6 +131,16 @@ export function ExpenseFormSheet({
                   {mb.user_id === myUserId ? " (você)" : ""}
                 </button>
               ))}
+              {/* If partner hasn't joined yet, show a placeholder */}
+              {members.length < 2 && (
+                <button
+                  type="button"
+                  disabled
+                  className="h-12 rounded-xl border border-dashed border-border text-sm text-muted-foreground"
+                >
+                  Parceiro pendente
+                </button>
+              )}
             </div>
           </div>
 
@@ -164,10 +174,7 @@ export function ExpenseFormSheet({
               >
                 <div className="text-sm font-semibold">Repasse 100%</div>
                 <div className="text-xs opacity-80">
-                  Pertence inteiro ao{" "}
-                  {members.length > 1
-                    ? (members.find((mb) => mb.user_id === otherUserId)?.display_name ?? "parceiro")
-                    : "parceiro"}
+                  Pertence inteiro ao {otherMember?.display_name ?? "parceiro"}
                 </div>
               </button>
             </div>
