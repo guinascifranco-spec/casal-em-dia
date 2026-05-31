@@ -130,7 +130,7 @@ export function Dashboard() {
 
       <div className="flex-1">
         {/* Mobile header */}
-        <header className="border-b border-[rgba(255,255,255,0.06)] lg:hidden">
+        <header className="border-b border-border lg:hidden">
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-6 py-5">
             <div className="min-w-0 flex-1">
               <p className="text-[10px] uppercase tracking-[0.25em] text-gold">caloteiros</p>

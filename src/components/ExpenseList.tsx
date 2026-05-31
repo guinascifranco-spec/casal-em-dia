@@ -50,7 +50,7 @@ export function ExpenseList({
   const nameOf = (uid: string) => members.find((m) => m.user_id === uid)?.display_name ?? "—";
 
   return (
-    <ul className="card-luxe divide-y divide-[rgba(255,255,255,0.06)] overflow-hidden p-0">
+    <ul className="card-luxe divide-y divide-border overflow-hidden p-0">
       {expenses.map((e) => {
         const canDelete = e.created_by === myUserId;
         const isTransfer = e.split_type === "transfer";

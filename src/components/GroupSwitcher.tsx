@@ -31,7 +31,7 @@ export function GroupSwitcher({
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="h-auto w-full justify-between gap-2 rounded-xl border border-[rgba(255,255,255,0.06)] bg-secondary/40 px-3 py-2 text-left"
+            className="h-auto w-full justify-between gap-2 rounded-xl border border-border bg-secondary/40 px-3 py-2 text-left"
           >
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.25em] text-gold">Grupo ativo</p>

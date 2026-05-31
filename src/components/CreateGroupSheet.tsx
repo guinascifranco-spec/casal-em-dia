@@ -38,7 +38,7 @@ export function CreateGroupSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl border-t border-[rgba(255,255,255,0.07)] bg-card">
+      <SheetContent side="bottom" className="rounded-t-3xl border-t border-border bg-card">
         <SheetHeader className="text-left">
           <SheetTitle className="font-display text-2xl">Novo grupo</SheetTitle>
         </SheetHeader>
