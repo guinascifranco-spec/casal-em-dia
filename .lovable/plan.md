@@ -1,56 +1,40 @@
-# Plano: 3 novas funcionalidades
+## Nova paleta de cores
 
-## 1. Múltiplos grupos (ex: "Gastos Junho", "Gastos Julho")
+Substituir a paleta atual (preto/rosê/dourado) por uma identidade clara e natural, com fundo creme como base padrão.
 
-Hoje cada usuário só pode estar em **um casal**. Para suportar vários grupos (mensais ou por tema), preciso mudar o modelo:
+### Mapeamento estratégico
 
-**Banco (migração):**
-- Permitir múltiplas linhas em `couple_members` por `user_id` (já permite, mas várias funções usam `.maybeSingle()` assumindo 1).
-- Remover/ajustar a policy `create couple if none` e a checagem "Você já está em um casal" em `createCouple` / `joinCouple`.
-- Adicionar coluna `active_couple_id` em uma nova tabela `user_preferences` (ou usar `localStorage`) para lembrar qual grupo está selecionado.
+| Cor | Hex | Uso |
+|---|---|---|
+| Creme | `#F9F7F4` | Fundo principal (`--background`) — base de toda a interface |
+| Azul-petróleo | `#1A2F3B` | Texto principal, títulos, sidebar, valores monetários grandes (`--foreground`, `--card-foreground`, sidebar) |
+| Terracota | `#D9745B` | Cor primária / CTA / acentos de destaque, gradiente luxe, anel de foco (`--primary`, `--gold` reaproveitado como acento quente, botões principais, veredito) |
+| Sage | `#87A987` | Cor positiva (quitado / saldo a receber), badges de sucesso (`--positive`, `--rose` reaproveitado como acento frio secundário) |
 
-**Server functions (`couple.functions.ts`, `expenses.functions.ts`):**
-- Nova `listMyCouples()` → retorna todos os grupos do usuário.
-- `getMyCoupleState`, `getMyInvite`, `listExpenses`, `createExpense` passam a aceitar `coupleId` como input (e validam que o usuário é membro).
-- Nova `createCouple` aceita criar mesmo já tendo grupo.
+Distribuição:
+- **Fundo `#F9F7F4`**: app inteiro, inclusive sidebar com leve variação (off-white levemente mais escuro para separar).
+- **Cards**: branco puro `#FFFFFF` sobre o creme, com borda sutil `#1A2F3B` a 8% para definir.
+- **Texto**: `#1A2F3B` para títulos/valores, com versão a 60% para texto secundário.
+- **Terracota `#D9745B`**: botão principal "Adicionar", gradiente do card de Veredito, valor do débito, código de convite, ícones Lucide principais, anel de foco.
+- **Sage `#87A987`**: estado "Vocês estão quites", saldo positivo (credor), confirmações (toast success).
+- **Destrutivo**: manter um vermelho derivado do terracota mais saturado para erros reais (excluir).
 
-**UI:**
-- Seletor de grupo no topo da sidebar/header (dropdown com lista + botão "+ Novo grupo").
-- Modal/sheet "Criar novo grupo" reaproveitando o fluxo de `OnboardingScreen` (nome do grupo + seu display name).
-- Persistir grupo ativo em `localStorage`.
+### Tema escuro
 
-## 2. Modo noturno / diurno
+Como o app já tem toggle dark/light, vou:
+- Tornar o **modo claro o padrão** (já que o pedido foca no fundo creme).
+- Manter o modo escuro funcional: fundo `#1A2F3B` (o azul-petróleo), cards levemente mais claros, mesmos acentos terracota/sage. Texto creme `#F9F7F4`.
+- Atualizar a meta tag `theme-color` e o manifesto PWA para `#F9F7F4`.
 
-- Adicionar variáveis de tema **claro** em `src/styles.css` dentro de `:root` (mantendo o atual como `.dark`). Paleta clara: fundo creme `#F0EDE8`, cartões brancos, mantendo rosê e dourado como acentos.
-- Hook `useTheme()` lendo/escrevendo em `localStorage` e aplicando a classe `dark` no `<html>`.
-- Botão toggle (ícone Sun/Moon do lucide) no header mobile e na sidebar desktop, ao lado do "Sair".
-- Default: escuro (preserva visual atual).
+### Arquivos alterados
 
-## 3. Instalação PWA
+- `src/styles.css` — reescrever blocos `:root` e `.light` (inverter: `:root` = claro, `.dark` = escuro), atualizar `--gradient-luxe`, sombras mais suaves, scrollbar terracota.
+- `src/hooks/use-theme.ts` — default `"light"` em vez de `"dark"`; atualizar cores do `theme-color`.
+- `src/routes/__root.tsx` — script inline anti-flicker passa a aplicar `light` por padrão; `<meta name="theme-color">` inicial = `#F9F7F4`.
+- `public/manifest.webmanifest` — `theme_color` e `background_color` para `#F9F7F4`.
+- `src/components/Verdict.tsx` — gradiente do blur ambient ajustado para terracota→sage; classes de cor positivo/negativo usam novos tokens (já são tokens, só recebem novos valores).
+- `src/components/Dashboard.tsx` — bordas do header/sidebar passam de `rgba(255,255,255,0.06)` para token `--border` (para funcionar nos dois temas).
+- `src/components/ui/button.tsx` — variante `outline` usa `--border` em vez de `rgba(255,255,255,0.1)` hardcoded.
+- `src/components/ui/input.tsx` — borda usa token `--border` em vez de `#2E2E40` hardcoded.
 
-⚠️ Aviso importante: PWA com service worker tem limitações no preview do Lovable (iframe). A instalação só funciona de verdade na URL publicada (`mepagacaloteira.lovable.app`).
-
-Abordagem mínima e segura (sem `vite-plugin-pwa`, sem service worker, sem cache offline):
-- Criar `public/manifest.webmanifest` com `name: "Caloteiros"`, `short_name`, `display: "standalone"`, cores do tema (`#0F0F14` / `#E8A0BF`), `start_url: "/"`.
-- Gerar ícones 192px e 512px (rosê + dourado, "C" em Playfair) em `public/icons/`.
-- Adicionar `<link rel="manifest">` e meta tags Apple touch icon / theme-color no `__root.tsx`.
-- Componente `InstallPrompt` que escuta o evento `beforeinstallprompt` e mostra um botão discreto "Instalar app" no dashboard (oculto se já instalado ou se evento não disparar — ex: iOS, que só permite "Adicionar à tela de início" manualmente; nesse caso mostro instruções).
-
-Sem service worker = sem offline, mas é instalável e estável dentro do editor.
-
----
-
-## Arquivos afetados
-
-- `supabase/migrations/...` (nova migração)
-- `src/lib/couple.functions.ts`, `src/lib/expenses.functions.ts`
-- `src/components/Dashboard.tsx`, `src/components/OnboardingScreen.tsx`, `src/components/ExpenseFormSheet.tsx`, `src/components/ExpenseList.tsx`, `src/components/Verdict.tsx`
-- Novo: `src/components/GroupSwitcher.tsx`, `src/components/CreateGroupSheet.tsx`, `src/components/ThemeToggle.tsx`, `src/components/InstallPrompt.tsx`
-- Novo: `src/hooks/use-theme.ts`, `src/hooks/use-active-couple.ts`
-- `src/styles.css` (tema claro), `src/routes/__root.tsx` (manifest + meta)
-- `public/manifest.webmanifest`, `public/icons/icon-192.png`, `public/icons/icon-512.png`
-
-## Pontos a confirmar
-
-1. Quer realmente PWA mínimo (instalável, sem offline) ou PWA completo com service worker (mais arriscado no preview)?
-2. Ao trocar de grupo, lançamentos antigos ficam visíveis no grupo correspondente, certo? (Cada grupo tem seus próprios `expenses` — nada é migrado.)
+Nenhuma lógica de negócio é alterada — apenas tokens visuais e remoção de cores hardcoded que quebrariam no tema claro.

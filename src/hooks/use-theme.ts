@@ -4,9 +4,9 @@ type Theme = "dark" | "light";
 const KEY = "caloteiros.theme";
 
 function getInitial(): Theme {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   const stored = localStorage.getItem(KEY) as Theme | null;
-  return stored === "light" || stored === "dark" ? stored : "dark";
+  return stored === "light" || stored === "dark" ? stored : "light";
 }
 
 export function useTheme() {
@@ -18,7 +18,7 @@ export function useTheme() {
     root.classList.toggle("light", theme === "light");
     localStorage.setItem(KEY, theme);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", theme === "dark" ? "#0F0F14" : "#F0EDE8");
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#1A2F3B" : "#F9F7F4");
   }, [theme]);
 
   return {

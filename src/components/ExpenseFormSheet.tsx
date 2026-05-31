@@ -73,7 +73,7 @@ export function ExpenseFormSheet({
       </SheetTrigger>
       <SheetContent
         side="bottom"
-        className="rounded-t-3xl border-t border-[rgba(255,255,255,0.07)] bg-card"
+        className="rounded-t-3xl border-t border-border bg-card"
       >
         <SheetHeader className="text-left">
           <SheetTitle className="font-display text-2xl">Novo lançamento</SheetTitle>
@@ -124,7 +124,7 @@ export function ExpenseFormSheet({
                     "h-12 rounded-xl border text-sm font-medium transition-all",
                     paidBy === mb.user_id
                       ? "border-transparent bg-gradient-luxe text-primary-foreground shadow-luxe"
-                      : "border-[rgba(255,255,255,0.08)] bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
+                      : "border-border bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
                   )}
                 >
                   {mb.display_name}
@@ -146,7 +146,7 @@ export function ExpenseFormSheet({
                   "rounded-xl border p-3 text-left transition-all",
                   splitType === "split"
                     ? "border-transparent bg-gradient-luxe text-primary-foreground shadow-luxe"
-                    : "border-[rgba(255,255,255,0.08)] bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
+                    : "border-border bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
                 )}
               >
                 <div className="text-sm font-semibold">Dividir 50/50</div>
@@ -159,7 +159,7 @@ export function ExpenseFormSheet({
                   "rounded-xl border p-3 text-left transition-all",
                   splitType === "transfer"
                     ? "border-transparent bg-gradient-luxe text-primary-foreground shadow-luxe"
-                    : "border-[rgba(255,255,255,0.08)] bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
+                    : "border-border bg-[var(--color-input)] text-foreground hover:border-[var(--color-gold)]/40",
                 )}
               >
                 <div className="text-sm font-semibold">Repasse 100%</div>
