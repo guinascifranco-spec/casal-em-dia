@@ -165,7 +165,9 @@ export function ExpenseFormSheet({
                 <div className="text-sm font-semibold">Repasse 100%</div>
                 <div className="text-xs opacity-80">
                   Pertence inteiro ao{" "}
-                  {members.find((mb) => mb.user_id === otherUserId)?.display_name ?? "outro"}
+                  {members.length > 1
+                    ? (members.find((mb) => mb.user_id === otherUserId)?.display_name ?? "parceiro")
+                    : "parceiro"}
                 </div>
               </button>
             </div>

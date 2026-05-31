@@ -211,7 +211,7 @@ export function Dashboard() {
         </main>
       </div>
 
-      {members.length >= 2 && resolvedId && (
+      {members.length >= 1 && resolvedId && (
         <ExpenseFormSheet
           coupleId={resolvedId}
           members={members}
