@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createExpense } from "@/lib/expenses.functions";
+import { checkEntryLimit } from "@/lib/plan.functions";
 import type { Member } from "@/lib/balance";
 import { parseBRLInput } from "@/lib/format";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 export function ExpenseFormSheet({
   periodId,
@@ -23,11 +25,23 @@ export function ExpenseFormSheet({
 }) {
   const qc = useQueryClient();
   const createFn = useServerFn(createExpense);
+  const checkLimitFn = useServerFn(checkEntryLimit);
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [paidBy, setPaidBy] = useState<string>(myUserId);
   const [splitType, setSplitType] = useState<"split" | "transfer">("split");
+  const [checking, setChecking] = useState(false);
+
+  // Paywall state
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [pendingEntry, setPendingEntry] = useState<{
+    periodId: string;
+    description: string;
+    amount: number;
+    paidBy: string;
+    splitType: "split" | "transfer";
+  } | null>(null);
 
   const m = useMutation({
     mutationFn: (vars: {
@@ -43,24 +57,44 @@ export function ExpenseFormSheet({
       setDescription("");
       setAmount("");
       setSplitType("split");
+      setPendingEntry(null);
       toast.success("Lançamento registrado");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const value = parseBRLInput(amount);
     if (!description.trim() || value <= 0) {
       toast.error("Preencha descrição e valor válidos.");
       return;
     }
-    m.mutate({ periodId, description: description.trim(), amount: value, paidBy, splitType });
+
+    const entry = { periodId, description: description.trim(), amount: value, paidBy, splitType };
+
+    setChecking(true);
+    try {
+      const limit = await checkLimitFn({ data: undefined });
+      if (!limit.allowed) {
+        // Store the pending entry and open the upgrade modal
+        setPendingEntry(entry);
+        setUpgradeOpen(true);
+        return;
+      }
+    } catch {
+      // If check fails, allow entry to proceed (fail-open to avoid blocking users)
+    } finally {
+      setChecking(false);
+    }
+
+    m.mutate(entry);
   }
 
   const otherMember = members.find((mb) => mb.user_id !== myUserId);
 
   return (
+    <>
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
@@ -180,11 +214,20 @@ export function ExpenseFormSheet({
             </div>
           </div>
 
-          <Button type="submit" className="h-12 w-full" disabled={m.isPending}>
-            {m.isPending ? "Salvando..." : "Registrar"}
+          <Button type="submit" className="h-12 w-full" disabled={m.isPending || checking}>
+            {checking ? "Verificando..." : m.isPending ? "Salvando..." : "Registrar"}
           </Button>
         </form>
       </SheetContent>
     </Sheet>
-  );
+
+    {/* Upgrade Modal — rendered outside Sheet to avoid z-index conflicts */}
+    <UpgradeModal
+      open={upgradeOpen}
+      onClose={() => setUpgradeOpen(false)}
+      onSuccess={() => {
+        if (pendingEntry) m.mutate(pendingEntry);
+      }}
+    />
+  </>);
 }
