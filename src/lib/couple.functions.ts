@@ -109,7 +109,7 @@ export const createCouple = createServerFn({ method: "POST" })
 
     const { error: merr } = await supabaseAdmin
       .from("couple_members")
-      .insert({ couple_id: couple.id, user_id: userId, display_name: data.displayName });
+      .upsert({ couple_id: couple.id, user_id: userId, display_name: data.displayName }, { onConflict: "user_id" });
     if (merr) throw new Error(merr.message);
 
     const code = genCode();
