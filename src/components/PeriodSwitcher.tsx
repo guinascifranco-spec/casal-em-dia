@@ -35,7 +35,7 @@ export function PeriodSwitcher({
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await deletePeriodFn({ periodId: id });
+      await deletePeriodFn({ data: { periodId: id } });
     },
     onSuccess: (_, deletedId) => {
       toast.success("Período excluído com sucesso!");
