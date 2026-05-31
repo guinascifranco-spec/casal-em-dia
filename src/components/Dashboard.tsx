@@ -13,8 +13,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Heart, LogOut, Receipt } from "lucide-react";
+import { Copy, Heart, LogOut, Plus, Receipt } from "lucide-react";
 import { toast } from "sonner";
+import { CreatePeriodSheet } from "@/components/CreatePeriodSheet";
 
 const ACTIVE_PERIOD_KEY = "casal-em-dia.activePeriodId";
 
@@ -42,6 +43,8 @@ export function Dashboard() {
   const inviteFn = useServerFn(getMyInvite);
   const periodsFn = useServerFn(listPeriods);
   const expensesFn = useServerFn(listExpenses);
+
+  const [createPeriodOpen, setCreatePeriodOpen] = useState(false);
 
   // ── Couple (permanent) ──────────────────────────────────────────────────
   const coupleQ = useQuery({
@@ -194,8 +197,19 @@ export function Dashboard() {
                 Olá, {memberNames || "casal"} <span className="ml-1">👋</span>
               </h1>
             </div>
-            <div className="hidden lg:block">
-              <InstallPrompt />
+            <div className="flex gap-2 shrink-0">
+              {coupleId && (
+                <Button
+                  size="sm"
+                  onClick={() => setCreatePeriodOpen(true)}
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-luxe text-primary-foreground shadow-luxe font-medium cursor-pointer"
+                >
+                  <Plus size={16} /> Novo Grupo
+                </Button>
+              )}
+              <div className="hidden lg:block">
+                <InstallPrompt />
+              </div>
             </div>
           </div>
 
@@ -229,13 +243,18 @@ export function Dashboard() {
 
           {/* No periods yet */}
           {periods.length === 0 && !periodsQ.isLoading && (
-            <div className="card-luxe p-8 text-center">
+            <div className="card-luxe p-8 text-center flex flex-col items-center justify-center gap-4">
               <p className="text-sm text-muted-foreground">
-                Nenhum período criado ainda.{" "}
-                <span className="font-medium text-gold">
-                  Use o seletor acima para criar o primeiro período (ex.: Junho 2026).
-                </span>
+                Nenhum período ou grupo criado ainda. Comece criando seu primeiro grupo de gastos.
               </p>
+              {coupleId && (
+                <Button
+                  onClick={() => setCreatePeriodOpen(true)}
+                  className="bg-gradient-luxe text-primary-foreground shadow-luxe rounded-xl cursor-pointer"
+                >
+                  <Plus size={16} className="mr-1.5" /> Criar Primeiro Grupo
+                </Button>
+              )}
             </div>
           )}
 
@@ -267,6 +286,15 @@ export function Dashboard() {
           periodId={resolvedPeriodId}
           members={members}
           myUserId={myUserId}
+        />
+      )}
+
+      {coupleId && (
+        <CreatePeriodSheet
+          coupleId={coupleId}
+          open={createPeriodOpen}
+          onOpenChange={setCreatePeriodOpen}
+          onCreated={(id) => setActiveId(id)}
         />
       )}
     </div>
