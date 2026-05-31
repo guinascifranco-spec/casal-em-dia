@@ -5,13 +5,20 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /** Verify the user has access to the period (via couple membership) */
 async function assertPeriodAccess(userId: string, periodId: string) {
-  const { data } = await supabaseAdmin
+  const { data: period } = await supabaseAdmin
     .from("periods")
-    .select("couple_id, couple_members!inner(user_id)")
+    .select("couple_id")
     .eq("id", periodId)
-    .eq("couple_members.user_id", userId)
     .maybeSingle();
-  if (!data) throw new Error("Você não tem acesso a este período.");
+  if (!period) throw new Error("Você não tem acesso a este período.");
+
+  const { data: member } = await supabaseAdmin
+    .from("couple_members")
+    .select("couple_id")
+    .eq("couple_id", period.couple_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!member) throw new Error("Você não tem acesso a este período.");
 }
 
 export const listExpenses = createServerFn({ method: "POST" })
