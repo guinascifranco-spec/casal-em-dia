@@ -51,7 +51,7 @@ export function OnboardingScreen() {
       <div className="relative z-10 mx-auto max-w-md">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-gold">casal em dia</p>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-gold">caloteiros</p>
             <h1 className="font-display mt-2 text-2xl text-foreground">contas a dois</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}>
@@ -61,8 +61,8 @@ export function OnboardingScreen() {
 
         <div className="mb-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-luxe shadow-luxe">
-              <Heart size={22} className="text-primary-foreground" />
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-secondary border border-border">
+              <img src="/logo.png" className="h-full w-full object-contain" alt="Caloteiros" />
             </div>
             <div>
               <h2 className="font-display text-2xl text-foreground">Bem-vindo</h2>
