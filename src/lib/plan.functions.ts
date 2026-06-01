@@ -18,7 +18,17 @@ const FREE_TIER_LIMIT = 5;
 export const checkEntryLimit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { userId } = context;
+    const { userId, claims } = context;
+    const userEmail = (claims as any)?.email;
+
+    const EXEMPT_EMAILS = [
+      "guinascifranco@gmail.com",
+      "biafontesmello@gmail.com"
+    ];
+
+    if (userEmail && EXEMPT_EMAILS.includes(userEmail)) {
+      return { allowed: true as const, count: 0, plan: "pro" as const };
+    }
 
     // 1. Get the couple this user belongs to
     const { data: membership } = await supabaseAdmin
