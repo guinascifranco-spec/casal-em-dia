@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createExpense } from "@/lib/expenses.functions";
@@ -63,6 +63,33 @@ export function ExpenseFormSheet({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const checkoutStatus = searchParams.get("checkout");
+
+    if (checkoutStatus === "success") {
+      const saved = localStorage.getItem("pendingExpense");
+      if (saved) {
+        try {
+          const entry = JSON.parse(saved);
+          // Auto-submit the saved entry
+          m.mutate(entry);
+          localStorage.removeItem("pendingExpense");
+        } catch (e) {
+          console.error("Failed to parse pending expense", e);
+        }
+      } else {
+        toast.success("Bem-vindo ao Pro! 🎉");
+      }
+      // Remove query param from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (checkoutStatus === "cancel") {
+      toast.error("Pagamento cancelado.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const value = parseBRLInput(amount);
@@ -78,6 +105,7 @@ export function ExpenseFormSheet({
       const limit = await checkLimitFn({ data: undefined });
       if (!limit.allowed) {
         // Store the pending entry and open the upgrade modal
+        localStorage.setItem("pendingExpense", JSON.stringify(entry));
         setPendingEntry(entry);
         setUpgradeOpen(true);
         return;

@@ -9,7 +9,7 @@ function getStripe() {
   return new Stripe(key, { apiVersion: "2025-05-28.basil" });
 }
 
-export const APIRoute = createAPIFileRoute("/api/stripe/create-subscription-intent")({
+export const APIRoute = createAPIFileRoute("/api/stripe/create-checkout-session")({
   POST: async ({ request }) => {
     try {
       // ── Auth: extract user from Bearer token ──────────────────────────────
@@ -71,32 +71,36 @@ export const APIRoute = createAPIFileRoute("/api/stripe/create-subscription-inte
           .eq("user_id", userId);
       }
 
-      // ── Create incomplete Subscription (returns PaymentIntent clientSecret) ─
-      const subscription = await stripe.subscriptions.create({
+      // ── Create Checkout Session ──────────────────────────────────────────
+      // Get the origin from the request headers to use for success/cancel URLs
+      const origin = request.headers.get('origin') || new URL(request.url).origin;
+
+      const session = await stripe.checkout.sessions.create({
         customer: customerId,
-        items: [{ price: priceId }],
-        payment_behavior: "default_incomplete",
-        payment_settings: { save_default_payment_method: "on_subscription" },
-        expand: ["latest_invoice.payment_intent"],
-        currency: "brl",
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: "subscription",
+        success_url: `${origin}/?checkout=success`,
+        cancel_url: `${origin}/?checkout=cancel`,
+        payment_method_types: ["card"],
       });
 
-      const invoice = subscription.latest_invoice as Stripe.Invoice;
-      const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
-
-      if (!paymentIntent?.client_secret) {
-        throw new Error("Não foi possível criar a intenção de pagamento.");
+      if (!session.url) {
+        throw new Error("Não foi possível criar a sessão de checkout.");
       }
 
       return new Response(
         JSON.stringify({
-          clientSecret: paymentIntent.client_secret,
-          subscriptionId: subscription.id,
+          url: session.url,
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
     } catch (err) {
-      console.error("[Stripe] create-subscription-intent error:", err);
+      console.error("[Stripe] create-checkout-session error:", err);
       const message = err instanceof Error ? err.message : "Erro interno";
       return new Response(JSON.stringify({ error: message }), {
         status: 500,
@@ -105,3 +109,4 @@ export const APIRoute = createAPIFileRoute("/api/stripe/create-subscription-inte
     }
   },
 });
+
