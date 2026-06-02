@@ -66,6 +66,9 @@ export function AuthScreen() {
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-10 text-center">
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl bg-secondary border border-border shadow-sm">
+            <img src="/logo.png" alt="Caloteiros" className="h-full w-full object-contain" />
+          </div>
           <p className="text-[10px] uppercase tracking-[0.4em] text-gold">caloteiros</p>
           <h1 className="font-display mt-3 text-4xl text-foreground">
             contas a dois
