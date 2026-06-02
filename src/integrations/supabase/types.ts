@@ -96,43 +96,96 @@ export type Database = {
       expenses: {
         Row: {
           amount: number
-          couple_id: string
           created_at: string
           created_by: string
           description: string
           id: string
           paid_by: string
+          period_id: string
           split_type: string
         }
         Insert: {
           amount: number
-          couple_id: string
           created_at?: string
           created_by: string
           description: string
           id?: string
           paid_by: string
+          period_id: string
           split_type: string
         }
         Update: {
           amount?: number
-          couple_id?: string
           created_at?: string
           created_by?: string
           description?: string
           id?: string
           paid_by?: string
+          period_id?: string
           split_type?: string
         }
         Relationships: [
           {
-            foreignKeyName: "expenses_couple_id_fkey"
+            foreignKeyName: "expenses_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      periods: {
+        Row: {
+          couple_id: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          couple_id: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          couple_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "periods_couple_id_fkey"
             columns: ["couple_id"]
             isOneToOne: false
             referencedRelation: "couples"
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_plans: {
+        Row: {
+          plan: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          plan?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          plan?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
