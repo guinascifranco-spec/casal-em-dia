@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("Missing STRIPE_SECRET_KEY environment variable.");
-  return new Stripe(key, { apiVersion: "2025-05-28.basil" as Stripe.StripeConfig["apiVersion"] });
+  return new Stripe(key, { apiVersion: "2025-05-28.basil" as never });
 }
 
 export const Route = createFileRoute("/api/stripe/create-checkout-session")({
