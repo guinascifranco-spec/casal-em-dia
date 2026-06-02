@@ -54,8 +54,8 @@ export function Dashboard() {
 
   const hasCouple = coupleQ.data?.hasCouple === true;
   const coupleId = hasCouple ? coupleQ.data!.coupleId : null;
-  const members = hasCouple ? coupleQ.data!.members : [];
-  const myUserId = hasCouple ? coupleQ.data!.myUserId : "";
+  const members: Array<{ display_name: string; user_id: string }> = hasCouple ? (coupleQ.data!.members ?? []) : [];
+  const myUserId: string = hasCouple ? (coupleQ.data!.myUserId ?? "") : "";
   const memberNames = members.map((m) => m.display_name).join(" & ");
   const groupLabel = (hasCouple && coupleQ.data!.coupleName) || memberNames || "Casal";
 
