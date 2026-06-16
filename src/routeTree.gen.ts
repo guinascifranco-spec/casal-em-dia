@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiStripeCreateCheckoutSessionRouteImport } from './routes/api/stripe/create-checkout-session'
 
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -32,40 +38,60 @@ const ApiStripeCreateCheckoutSessionRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/api/stripe/create-checkout-session': typeof ApiStripeCreateCheckoutSessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/api/stripe/create-checkout-session': typeof ApiStripeCreateCheckoutSessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
   '/api/stripe/create-checkout-session': typeof ApiStripeCreateCheckoutSessionRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/stripe/create-checkout-session' | '/api/stripe/webhook'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/api/stripe/create-checkout-session'
+    | '/api/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/stripe/create-checkout-session' | '/api/stripe/webhook'
+  to:
+    | '/'
+    | '/app'
+    | '/api/stripe/create-checkout-session'
+    | '/api/stripe/webhook'
   id:
     | '__root__'
     | '/'
+    | '/app'
     | '/api/stripe/create-checkout-session'
     | '/api/stripe/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRoute
   ApiStripeCreateCheckoutSessionRoute: typeof ApiStripeCreateCheckoutSessionRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -92,6 +118,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRoute,
   ApiStripeCreateCheckoutSessionRoute: ApiStripeCreateCheckoutSessionRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
