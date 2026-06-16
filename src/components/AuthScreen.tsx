@@ -4,6 +4,7 @@ import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 
 type Mode = "signin" | "signup";
@@ -64,12 +65,9 @@ export function AuthScreen() {
       />
 
       <div className="relative z-10 w-full max-w-sm">
-        <div className="mb-10 text-center">
-          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl bg-secondary border border-border shadow-sm">
-            <img src="/logo.png" alt="Caloteiros" className="h-full w-full object-contain" />
-          </div>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-gold">caloteiros</p>
-          <h1 className="font-display mt-3 text-4xl text-foreground">
+        <div className="mb-10 flex flex-col items-center text-center">
+          <Logo size="lg" />
+          <h1 className="font-display mt-4 text-4xl text-foreground">
             contas a dois
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">

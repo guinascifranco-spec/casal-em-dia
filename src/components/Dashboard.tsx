@@ -11,6 +11,7 @@ import { OnboardingScreen } from "@/components/OnboardingScreen";
 import { PeriodSwitcher } from "@/components/PeriodSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, Heart, LogOut, Plus, Receipt } from "lucide-react";
@@ -113,13 +114,8 @@ export function Dashboard() {
       {/* Sidebar (desktop) */}
       <aside className="sidebar-luxe hidden w-64 shrink-0 flex-col px-6 py-8 lg:flex">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-secondary border border-border shrink-0">
-            <img src="/logo.png" className="h-full w-full object-contain" alt="Caloteiros" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.25em] text-gold">caloteiros</p>
-            <h2 className="font-display truncate mt-0.5 text-base text-foreground">{groupLabel}</h2>
-          </div>
+          <Logo size="sm" />
+          <h2 className="font-display truncate text-base text-foreground min-w-0">{groupLabel}</h2>
         </div>
 
         <div className="mt-6">
@@ -162,13 +158,8 @@ export function Dashboard() {
         <header className="border-b border-border lg:hidden">
           <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-6 py-5">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-secondary border border-border shrink-0">
-                <img src="/logo.png" className="h-full w-full object-contain" alt="Caloteiros" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[9px] uppercase tracking-[0.25em] text-gold leading-none">caloteiros</p>
-                <h1 className="font-display truncate text-base text-foreground mt-0.5">{groupLabel}</h1>
-              </div>
+              <Logo size="sm" />
+              <h1 className="font-display truncate text-base text-foreground min-w-0">{groupLabel}</h1>
             </div>
             <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}>
