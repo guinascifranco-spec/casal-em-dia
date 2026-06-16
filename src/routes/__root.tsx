@@ -110,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
-        children: `try{var t=localStorage.getItem('caloteiros.theme')||'light';document.documentElement.classList.add(t);}catch(e){document.documentElement.classList.add('light');}`,
+        children: `try{var s=localStorage.getItem('caloteiros.theme');var t=s==='dark'||s==='light'?s:(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.classList.add(t);}catch(e){document.documentElement.classList.add('light');}`,
       },
     ],
   }),
