@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Heart } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 
 export function OnboardingScreen() {
@@ -50,20 +51,15 @@ export function OnboardingScreen() {
 
       <div className="relative z-10 mx-auto max-w-md">
         <div className="mb-8 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-gold">caloteiros</p>
-            <h1 className="font-display mt-2 text-2xl text-foreground">contas a dois</h1>
-          </div>
+          <Logo size="sm" />
           <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}>
             Sair
           </Button>
         </div>
 
         <div className="mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-secondary border border-border">
-              <img src="/logo.png" className="h-full w-full object-contain" alt="Caloteiros" />
-            </div>
+          <div className="flex items-center gap-4">
+            <Logo size="md" />
             <div>
               <h2 className="font-display text-2xl text-foreground">Bem-vindo</h2>
               <p className="text-sm text-muted-foreground">
