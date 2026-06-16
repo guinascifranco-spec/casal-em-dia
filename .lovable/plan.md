@@ -1,21 +1,49 @@
-## Substituir o logo do app pela nova imagem (fantasminha)
+## Objetivo
 
-### O que fazer
+Substituir o arquivo `public/logo.png` pela nova imagem do fantasma anexada e padronizar a apresentação visual: a imagem do logo **acima** e o texto **"CALOTEIROS"** logo **abaixo**, em todos os locais onde o logo aparece atualmente.
 
-1. **Substituir os arquivos de logo/ícone**
-   - Sobrescrever `public/logo.png` com a imagem enviada (Cópia de Logo.png).
-   - Sobrescrever `public/icons/icon-512.png` (versão 512x512, mesma imagem) — usado no manifest do PWA (`any` e `maskable`).
+## Locais afetados
 
-2. **Adicionar o logo na tela de Login (`src/components/AuthScreen.tsx`)**
-   - Inserir o logo acima do título "contas a dois", num contêiner circular/arredondado (ex.: `rounded-2xl` com fundo `bg-secondary` e borda sutil), tamanho ~80px, centralizado.
+A imagem `/logo.png` já é usada nestes pontos — todos receberão o mesmo tratamento (imagem + texto abaixo):
 
-3. **Garantir cantos suaves nas exibições existentes**
-   - `Dashboard.tsx` e `OnboardingScreen.tsx` já exibem o logo dentro de um wrapper `rounded-2xl` — mantém.
-   - Confirmar `object-contain` para não distorcer.
+1. `src/components/AuthScreen.tsx` — tela de login
+2. `src/components/Dashboard.tsx` — sidebar desktop + header mobile
+3. `src/components/OnboardingScreen.tsx` — header e bloco de boas-vindas
+4. `public/logo.png` — arquivo binário substituído pela imagem anexada
+5. `public/icons/icon-512.png` — substituído pela mesma imagem (usado como ícone PWA)
 
-### Arquivos alterados
-- `public/logo.png` (substituído)
-- `public/icons/icon-512.png` (substituído)
-- `src/components/AuthScreen.tsx` (adicionar logo na tela de login)
+## Mudanças
 
-Nenhuma mudança em lógica/rotas/backend.
+### 1. Arquivo de imagem
+- Copiar `user-uploads://Cópia_de_Logo_1.png` para `public/logo.png` e `public/icons/icon-512.png`, sobrescrevendo os atuais.
+- A imagem tem fundo claro/transparente e funciona nos dois temas (claro/escuro) — sem necessidade de versão alternativa.
+
+### 2. Componente `<Logo />` reutilizável
+Criar `src/components/Logo.tsx` para padronizar o conjunto **imagem + texto "CALOTEIROS" abaixo**, com variantes de tamanho:
+
+```text
+┌──────────┐
+│  [img]   │   ← logo do fantasma, bordas arredondadas
+└──────────┘
+ CALOTEIROS    ← texto em uppercase, tracking-widest, cor gold
+```
+
+Props:
+- `size`: `"sm" | "md" | "lg"` (controla tamanho da imagem e da fonte)
+- `showLabel`: `boolean` (default `true`) — para casos onde só queremos o ícone
+- `className`: extensão opcional
+
+### 3. Substituições por arquivo
+- **AuthScreen**: o bloco atual `<div>img + p "caloteiros" + h1 "contas a dois"</div>` vira `<Logo size="lg" />` seguido do título "contas a dois" (mantido).
+- **Dashboard sidebar (desktop)**: substituir `img + p "caloteiros"` por `<Logo size="md" />` ao lado do nome do casal.
+- **Dashboard header (mobile)**: substituir por `<Logo size="sm" />`.
+- **OnboardingScreen**: o pequeno header e o bloco de boas-vindas usam `<Logo size="sm" />` e `<Logo size="md" />`.
+
+### 4. Tema claro / escuro
+A imagem é colorida com contornos escuros sobre fundo claro. Para garantir legibilidade no dark mode, o container do logo manterá o fundo `bg-secondary` (já existente) e bordas arredondadas suaves — assim a imagem fica em um "cartão" claro mesmo no tema escuro. Proporção preservada via `object-contain`.
+
+## Detalhes técnicos
+
+- Sem mudança em rotas, estado, lógica de negócio ou queries.
+- Sem novas dependências.
+- O arquivo `public/logo.png` referenciado em `__root.tsx` (favicon, og:image, apple-touch-icon) é automaticamente atualizado pela substituição do binário.
