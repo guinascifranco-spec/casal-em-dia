@@ -25,7 +25,8 @@ export function Logo({ size = "md", showLabel = true, className }: LogoProps) {
           s.rounded,
         )}
       >
-        <img src="/logo.png" alt="Caloteiros" className="h-full w-full object-contain" />
+        <img src="/logo.png" alt="Caloteiros" className="h-full w-full object-contain block dark:hidden" />
+        <img src="/logo-dark.png" alt="Caloteiros" className="h-full w-full object-contain hidden dark:block" />
       </div>
       {showLabel && (
         <p className={cn("uppercase font-semibold text-gold leading-none", s.label)}>
