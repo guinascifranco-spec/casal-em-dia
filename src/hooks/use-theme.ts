@@ -6,7 +6,8 @@ const KEY = "caloteiros.theme";
 function getInitial(): Theme {
   if (typeof window === "undefined") return "light";
   const stored = localStorage.getItem(KEY) as Theme | null;
-  return stored === "light" || stored === "dark" ? stored : "light";
+  if (stored === "light" || stored === "dark") return stored;
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 export function useTheme() {
