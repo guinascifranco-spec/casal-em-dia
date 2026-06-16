@@ -1,28 +1,45 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useSession } from "@/hooks/use-session";
-import { AuthScreen } from "@/components/AuthScreen";
-import { Dashboard } from "@/components/Dashboard";
-import { Toaster } from "@/components/ui/sonner";
+import { Navbar } from "@/components/landing/Navbar";
+import { Hero } from "@/components/landing/Hero";
+import { Problem } from "@/components/landing/Problem";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Features } from "@/components/landing/Features";
+import { FinalCTA } from "@/components/landing/FinalCTA";
+import { Footer } from "@/components/landing/Footer";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "caloteiros — finanças compartilhadas para casais" },
+      {
+        name: "description",
+        content:
+          "Casais com contas separadas finalmente sabem quem deve o quê — em tempo real. Sem segredo, sem briga.",
+      },
+      {
+        property: "og:title",
+        content: "caloteiros — finanças compartilhadas para casais",
+      },
+      {
+        property: "og:description",
+        content:
+          "Casais com contas separadas finalmente sabem quem deve o quê — em tempo real.",
+      },
+    ],
+  }),
+  component: LandingPage,
 });
 
-function Index() {
-  const { session, loading } = useSession();
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-sm text-muted-foreground">Carregando...</p>
-      </div>
-    );
-  }
-
+function LandingPage() {
   return (
-    <>
-      {session ? <Dashboard /> : <AuthScreen />}
-      <Toaster richColors position="top-center" />
-    </>
+    <main className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <Hero />
+      <Problem />
+      <HowItWorks />
+      <Features />
+      <FinalCTA />
+      <Footer />
+    </main>
   );
 }
