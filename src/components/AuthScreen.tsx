@@ -43,10 +43,14 @@ export function AuthScreen() {
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/app`,
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
+      // Popup flow: session already set, make sure we land on the app.
+      if (window.location.pathname !== "/app") {
+        window.location.assign("/app");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao conectar com Google";
       toast.error(msg);
@@ -54,6 +58,7 @@ export function AuthScreen() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-6">
