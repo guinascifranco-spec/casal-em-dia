@@ -189,12 +189,6 @@
   font-feature-settings: "tnum" 1, "ss01" 1;
 }
 
-@utility font-display {
-  font-family: var(--font-display);
-  letter-spacing: -0.02em;
-  font-weight: 600;
-}
-
 /* Valores monetários — o conteúdo mais importante da tela */
 @utility money {
   font-family: var(--font-display);
@@ -213,13 +207,11 @@
   color: var(--color-muted-foreground);
 }
 
-@utility text-gold {
-  color: var(--color-gold);
+@utility display-tight {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
 }
 
-@utility text-rose {
-  color: var(--color-rose);
-}
 
 @utility bg-gradient-luxe {
   background-image: var(--gradient-luxe);
