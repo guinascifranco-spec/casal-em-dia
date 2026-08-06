@@ -14,7 +14,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Heart, LogOut, Plus, Receipt } from "lucide-react";
+import { CalendarPlus, Copy, LogOut, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { CreatePeriodSheet } from "@/components/CreatePeriodSheet";
 
@@ -110,167 +110,144 @@ export function Dashboard() {
   const activePeriod = periods.find((p) => p.id === resolvedPeriodId);
 
   return (
-    <div className="min-h-screen bg-background lg:flex">
-      {/* Sidebar (desktop) */}
-      <aside className="sidebar-luxe hidden w-64 shrink-0 flex-col px-6 py-8 lg:flex">
-        <div className="flex items-center gap-3">
-          <Logo size="sm" />
-          <h2 className="font-display truncate text-base text-foreground min-w-0">{groupLabel}</h2>
+    <div className="min-h-screen bg-background">
+      {/* Top bar */}
+      <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-xl">
+        <div className="mx-auto grid max-w-3xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <Logo size="sm" orientation="horizontal" showLabel={false} />
+            <div className="min-w-0">
+              <p className="truncate font-display text-sm font-semibold tracking-tight text-foreground">
+                {groupLabel}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {activePeriod ? activePeriod.name : "Sem período ativo"}
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <div className="hidden sm:block">
+              <InstallPrompt />
+            </div>
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Sair"
+              onClick={() => supabase.auth.signOut()}
+            >
+              <LogOut size={16} />
+            </Button>
+          </div>
         </div>
 
-        <div className="mt-6">
-          {coupleId && (
+        {coupleId && (
+          <div className="mx-auto grid max-w-3xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-5 pb-3 sm:px-6">
             <PeriodSwitcher
               coupleId={coupleId}
               periods={periods}
               activeId={resolvedPeriodId}
               onSelect={setActiveId}
             />
-          )}
-        </div>
-
-        <nav className="mt-8 flex flex-col gap-1">
-          <a className="flex items-center gap-3 rounded-xl bg-secondary/60 px-3 py-2 text-sm font-medium text-foreground">
-            <Heart size={18} className="text-rose" /> Painel
-          </a>
-          <a className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-secondary/40 hover:text-foreground">
-            <Receipt size={18} className="text-rose" /> Lançamentos
-          </a>
-        </nav>
-
-        <div className="mt-auto flex flex-col gap-2">
-          <InstallPrompt />
-          <div className="flex items-center justify-between">
-            <ThemeToggle />
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => supabase.auth.signOut()}
+              className="h-11 shrink-0 gap-1.5"
+              onClick={() => setCreatePeriodOpen(true)}
             >
-              <LogOut size={16} /> Sair
+              <CalendarPlus size={15} />
+              <span className="hidden sm:inline">Novo período</span>
             </Button>
           </div>
+        )}
+      </header>
+
+      <main className="mx-auto max-w-3xl space-y-7 px-5 py-8 pb-32 sm:px-6 sm:py-10">
+        <div>
+          <p className="eyebrow">Painel do casal</p>
+          <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            Olá, {memberNames || "casal"}
+          </h1>
         </div>
-      </aside>
 
-      <div className="flex-1">
-        {/* Mobile header */}
-        <header className="border-b border-border lg:hidden">
-          <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-6 py-5">
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <Logo size="sm" />
-              <h1 className="font-display truncate text-base text-foreground min-w-0">{groupLabel}</h1>
+        {/* Invite banner — only while partner hasn't joined */}
+        {inviteQ.data && (
+          <div className="card-luxe grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4">
+            <div className="min-w-0">
+              <p className="eyebrow">Convite pendente</p>
+              <p className="money mt-1.5 text-2xl tracking-[0.2em] text-primary">
+                {inviteQ.data.code}
+              </p>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                Compartilhe este código <strong>uma única vez</strong> com seu parceiro. Depois
+                disso, ambos criam períodos livremente.
+              </p>
             </div>
-            <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}>
-              <LogOut size={16} />
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0"
+              onClick={() => {
+                navigator.clipboard.writeText(inviteQ.data!.code);
+                toast.success("Código copiado");
+              }}
+            >
+              <Copy size={15} /> Copiar
             </Button>
           </div>
-          {coupleId && (
-            <div className="mx-auto max-w-2xl px-6 pb-4">
-              <PeriodSwitcher
-                coupleId={coupleId}
-                periods={periods}
-                activeId={resolvedPeriodId}
-                onSelect={setActiveId}
-              />
-            </div>
-          )}
-        </header>
+        )}
 
-        <main className="mx-auto max-w-2xl space-y-8 px-6 py-10 pb-32">
-          <div className="flex items-start justify-between gap-3">
+        {/* No periods yet */}
+        {periods.length === 0 && !periodsQ.isLoading && (
+          <div className="card-luxe flex flex-col items-center gap-4 px-6 py-14 text-center">
+            <div className="relative">
+              <span aria-hidden className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl" />
+              <span className="relative grid h-14 w-14 place-items-center rounded-2xl border border-border bg-surface text-primary">
+                <CalendarPlus size={24} strokeWidth={1.6} />
+              </span>
+            </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                {activePeriod ? activePeriod.name : "Bem-vindos"}
+              <p className="font-display text-lg tracking-tight text-foreground">
+                Comece pelo primeiro período
               </p>
-              <h1 className="font-display mt-2 text-3xl text-foreground sm:text-4xl">
-                Olá, {memberNames || "casal"} <span className="ml-1">👋</span>
-              </h1>
+              <p className="mx-auto mt-1.5 max-w-xs text-sm text-muted-foreground">
+                Organize os gastos por mês ou por viagem — como fizer mais sentido para vocês.
+              </p>
             </div>
-            <div className="flex gap-2 shrink-0">
-              {coupleId && (
-                <Button
-                  size="sm"
-                  onClick={() => setCreatePeriodOpen(true)}
-                  className="flex items-center gap-1.5 rounded-xl bg-gradient-luxe text-primary-foreground shadow-luxe font-medium cursor-pointer"
-                >
-                  <Plus size={16} /> Novo Grupo
-                </Button>
-              )}
-              <div className="hidden lg:block">
-                <InstallPrompt />
-              </div>
-            </div>
-          </div>
-
-          {/* Invite banner — only while partner hasn't joined */}
-          {inviteQ.data && (
-            <div className="card-luxe flex items-center justify-between gap-4 px-5 py-4">
-              <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-gold">
-                  Convite pendente
-                </p>
-                <p className="font-display tabular mt-1 text-2xl tracking-widest text-foreground">
-                  {inviteQ.data.code}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Compartilhe este código <strong>uma única vez</strong> com seu parceiro. Depois
-                  disso, ambos criam períodos livremente.
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  navigator.clipboard.writeText(inviteQ.data!.code);
-                  toast.success("Código copiado");
-                }}
-              >
-                <Copy size={16} /> Copiar
+            {coupleId && (
+              <Button variant="mint" onClick={() => setCreatePeriodOpen(true)}>
+                <Plus size={16} /> Criar primeiro período
               </Button>
-            </div>
-          )}
+            )}
+          </div>
+        )}
 
-          {/* No periods yet */}
-          {periods.length === 0 && !periodsQ.isLoading && (
-            <div className="card-luxe p-8 text-center flex flex-col items-center justify-center gap-4">
-              <p className="text-sm text-muted-foreground">
-                Nenhum período ou grupo criado ainda. Comece criando seu primeiro grupo de gastos.
-              </p>
-              {coupleId && (
-                <Button
-                  onClick={() => setCreatePeriodOpen(true)}
-                  className="bg-gradient-luxe text-primary-foreground shadow-luxe rounded-xl cursor-pointer"
-                >
-                  <Plus size={16} className="mr-1.5" /> Criar Primeiro Grupo
-                </Button>
-              )}
-            </div>
-          )}
+        {resolvedPeriodId && (
+          <>
+            <Verdict members={members} expenses={expQ.data ?? []} myUserId={myUserId} />
 
-          {resolvedPeriodId && (
-            <>
-              <Verdict members={members} expenses={expQ.data ?? []} myUserId={myUserId} />
-
-              <section>
-                <h2 className="mb-3 text-[10px] uppercase tracking-[0.25em] text-gold">
-                  Lançamentos
-                </h2>
-                {expQ.isLoading ? (
-                  <p className="text-sm text-muted-foreground">Carregando...</p>
-                ) : (
-                  <ExpenseList
-                    expenses={expQ.data ?? []}
-                    members={members}
-                    myUserId={myUserId}
-                  />
+            <section>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="eyebrow">Lançamentos</h2>
+                {expQ.data && expQ.data.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {expQ.data.length} {expQ.data.length === 1 ? "registro" : "registros"}
+                  </span>
                 )}
-              </section>
-            </>
-          )}
-        </main>
-      </div>
+              </div>
+              {expQ.isLoading ? (
+                <p className="text-sm text-muted-foreground">Carregando...</p>
+              ) : (
+                <ExpenseList
+                  expenses={expQ.data ?? []}
+                  members={members}
+                  myUserId={myUserId}
+                />
+              )}
+            </section>
+          </>
+        )}
+      </main>
 
       {resolvedPeriodId && (
         <ExpenseFormSheet
